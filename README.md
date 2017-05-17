@@ -6,9 +6,10 @@ The major contributors of this repository include [Xizhou Zhu](https://github.co
 ## Introduction
 
 
-**Deep Feature Flow** is initially described in a [CVPR 2017 paper](https://arxiv.org/abs/1611.07715).
+**Deep Feature Flow** is initially described in a [CVPR 2017 paper](https://arxiv.org/abs/1611.07715). It provides a simple, fast, accurate, and end-to-end framework for video recognition (e.g., object detection and semantic segmentation in videos). It is worth noting that:
 
-**R-FCN** is initially described in a [NIPS 2016 paper](https://arxiv.org/abs/1605.06409).
+* Deep Feature Flow significantly speeds up video recognition by applying the heavy-weight image recognition network (e.g., ResNet-101) on sparse key frames, and propagating the recognition outputs (feature maps) to the other frames by the light-weight flow network (e.g., [FlowNet](https://arxiv.org/abs/1504.06852)).
+* The entire system is end-to-end trained for the task of video recognition, which is vital for improving the recognition accuracy. Directly adopting state-of-the-art flow estimation methods without end-to-end training would deliver noticable worse results.
 
 ***Click image to watch our demo video***
 
@@ -55,8 +56,8 @@ If you find Deep Feature Flow useful in your research, please consider citing:
 
 |                                 | <sub>training data</sub>     | <sub>testing data</sub> | <sub>mAP@0.5</sub> | <sub>time/image</br> (Tesla K40)</sub> | <sub>time/image</br>(Maxwell Titan X)</sub> |
 |---------------------------------|-------------------|--------------|---------|---------|--------|
-| <sub>R-FCN, ResNet-v1-101</sub>                    | <sub>ImageNet DET + VID train</sub> | <sub>ImageNet VID validation</sub> | 74.1    | 0.271s    | 0.133s |
-| <sub>Deep Feature Flow</br>(R-FCN, ResNet-v1-101, FlowNet)</sub>           | <sub>ImageNet DET + VID train</sub> | <sub>ImageNet VID validation</sub> | 73.0    | 0.073s    | 0.034s |
+| <sub>Frame baseline</br>(R-FCN, ResNet-v1-101)</sub>                    | <sub>ImageNet DET train + VID train</sub> | <sub>ImageNet VID validation</sub> | 74.1    | 0.271s    | 0.133s |
+| <sub>Deep Feature Flow</br>(R-FCN, ResNet-v1-101, FlowNet)</sub>           | <sub>ImageNet DET train + VID train</sub> | <sub>ImageNet VID validation</sub> | 73.0    | 0.073s    | 0.034s |
 
 *Running time is counted on a single GPU (mini-batch size is 1 in inference, key-frame duration length for Deep Feature Flow is 10).*
 
@@ -134,14 +135,14 @@ git clone https://github.com/msracver/Deep-Feature-Flow.git
 
 1. All of our experiment settings (GPU #, dataset, etc.) are kept in yaml config files at folder `./experiments/{rfcn/dff_rfcn}/cfgs`.
 
-2. Two config files have been provided so far, namely, R-FCN and Deep Feature Flow with R-FCN for ImageNet VID. We use 4 GPUs to train models on ImageNet VID.
+2. Two config files have been provided so far, namely, Frame baseline with R-FCN and Deep Feature Flow with R-FCN for ImageNet VID. We use 4 GPUs to train models on ImageNet VID.
 
 3. To perform experiments, run the python script with the corresponding config file as input. For example, to train and test Deep Feature Flow with R-FCN, use the following command
     ```
     python experiments/dff_rfcn/dff_rfcn_end2end_train_test.py --cfg experiments/dff_rfcn/cfgs/resnet_v1_101_flownet_imagenet_vid_rfcn_end2end_ohem.yaml
     ```
 	A cache folder would be created automatically to save the model and the log under `output/dff_rfcn/imagenet_vid/`.
-    
+
 4. Please find more details in config files and in our code.
 
 ## Misc.
@@ -151,4 +152,3 @@ Code has been tested under:
 - Ubuntu 14.04 with a Maxwell Titan X GPU and Intel Xeon CPU E5-2620 v2 @ 2.10GHz
 - Windows Server 2012 R2 with 8 K40 GPUs and Intel Xeon CPU E5-2650 v2 @ 2.60GHz
 - Windows Server 2012 R2 with 4 Pascal Titan X GPUs and Intel Xeon CPU E5-2650 v4 @ 2.30GHz
-

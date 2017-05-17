@@ -25,7 +25,9 @@ cur_path = os.path.abspath(os.path.dirname(__file__))
 update_config(cur_path + '/../experiments/rfcn/cfgs/rfcn_vid_demo.yaml')
 
 sys.path.insert(0, os.path.join(cur_path, '../external/mxnet', config.MXNET_VERSION))
+sys.path.insert(0, '/home/syzhang/mxnet_dff/python')
 import mxnet as mx
+print mx.__version__
 from core.tester import im_detect, Predictor
 from symbols import *
 from utils.load_model import load_param

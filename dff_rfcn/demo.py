@@ -25,7 +25,9 @@ cur_path = os.path.abspath(os.path.dirname(__file__))
 update_config(cur_path + '/../experiments/dff_rfcn/cfgs/dff_rfcn_vid_demo.yaml')
 
 sys.path.insert(0, os.path.join(cur_path, '../external/mxnet', config.MXNET_VERSION))
+sys.path.insert(0, '/home/syzhang/mxnet_dff/python')
 import mxnet as mx
+print mx.__version__
 from core.tester import im_detect, Predictor
 from symbols import *
 from utils.load_model import load_param
@@ -61,7 +63,7 @@ def main():
                'whale', 'zebra']
 
     # load demo data
-    image_names = glob.glob(cur_path + '/../demo/ILSVRC2015_val_00007010/*.JPEG')
+    image_names = glob.glob(cur_path + '/../demo/ILSVRC2015_val_00007012/*.JPEG')
     output_dir = cur_path + '/../demo/rfcn_dff/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -88,6 +90,8 @@ def main():
     data_names = ['data', 'im_info', 'data_key', 'feat_key']
     label_names = []
     data = [[mx.nd.array(data[i][name]) for name in data_names] for i in xrange(len(data))]
+    max_data_shape = [[('data', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),
+                       ('data_key', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),]]
     max_data_shape = [[('data', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),
                        ('data_key', (1, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES]))),]]
     provide_data = [[(k, v.shape) for k, v in zip(data_names, data[i])] for i in xrange(len(data))]
@@ -158,5 +162,4 @@ def main():
 
     print 'done'
 
-if __name__ == '__main__':
-    main()
+main()
