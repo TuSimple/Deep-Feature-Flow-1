@@ -8,7 +8,7 @@ import os
 import numpy as np
 import cPickle
 from imdb import IMDB
-
+from kitti_mot_eval import kitti_mot_eval
 
 class KittiMOT(IMDB):
     def __init__(self, image_set, root_path, dataset_path, result_path=None):
@@ -42,14 +42,17 @@ class KittiMOT(IMDB):
         with open(image_set_index_file) as f:
             lines = [x.strip().split(' ') for x in f.readlines()]
 
-        self.image_set_index = ['%s/%06d' % (x[0], int(x[2])) for x in lines]
-        # for get pair iamge path
-        # 'data/%06d' % 123   ---> 'data/000123'
-        self.pattern = [x[0]+'/%06d' for x in lines]
-        self.frame_id = [int(x[1]) for x in lines]
-        self.frame_seg_id = [int(x[2]) for x in lines]
-        self.frame_seg_len = [int(x[3]) for x in lines]
-
+        if len(lines[0]) == 2:
+            self.image_set_index = [x[0] for x in lines]
+            self.frame_id = [int(x[1]) for x in lines]
+        else:
+            # for get pair iamge path
+            # 'data/%06d' % 123   ---> 'data/000123'
+            self.image_set_index = ['%s/%06d' % (x[0], int(x[2])) for x in lines]
+            self.pattern = [x[0]+'/%06d' for x in lines]
+            self.frame_id = [int(x[1]) for x in lines]
+            self.frame_seg_id = [int(x[2]) for x in lines]
+            self.frame_seg_len = [int(x[3]) for x in lines]
 
     def image_path_from_index(self, index):
         """
@@ -90,9 +93,12 @@ class KittiMOT(IMDB):
         roi_rec = dict()
         roi_rec['image'] = self.image_path_from_index(index)
         roi_rec['frame_id'] = self.frame_id[iindex]
-        roi_rec['pattern'] = self.image_path_from_index(self.pattern[iindex])
-        roi_rec['frame_seg_id'] = self.frame_seg_id[iindex]
-        roi_rec['frame_seg_len'] = self.frame_seg_id[iindex]
+
+        if hasattr(self,'frame_seg_id'):
+            roi_rec['pattern'] = self.image_path_from_index(self.pattern[iindex])
+            roi_rec['frame_seg_id'] = self.frame_seg_id[iindex]
+            roi_rec['frame_seg_len'] = self.frame_seg_len[iindex]
+
 
         image_size = cv2.imread(roi_rec['image']).shape
         roi_rec['height'] = image_size[0]
@@ -146,7 +152,7 @@ class KittiMOT(IMDB):
         :param detections: result matrix, [bbox, confidence]
         :return:
         """
-        result_dir = os.path.result_path, 'results'
+        result_dir = os.path.join(self.result_path, 'results')
         if not os.path.exists(result_dir):
             os.mkdir(result_dir)
         self.write_kitti_mot_results(detections)
@@ -190,7 +196,7 @@ class KittiMOT(IMDB):
         filename = 'det_' + self.image_set + '_{:s}.txt'
         path = os.path.join(res_file_folder, filename)
         return path
-    def write_kitt_mot_results(self, all_boxes):
+    def write_kitti_mot_results(self, all_boxes):
         print "Writing {} Kitti MOT results file".format('all')
         filename = self.get_result_file_template().format('all')
 
@@ -205,7 +211,7 @@ class KittiMOT(IMDB):
 
                     for k in range(dets.shape[0]):
                         f.write('{:d} {:d} {:.4f} {:.2f} {:.2f} {:.2f} {:.2f}\n'.
-                                format(frame_ids[im_ind], cls_ind, dets[k, -1],
+                                format(self.frame_id[im_ind], cls_ind, dets[k, -1],
                                 dets[k, 0], dets[k, 1], dets[k, 2], dets[k, 3]))
 
     def write_kitti_mot_results_multiprocess(self, detections):
@@ -216,7 +222,7 @@ class KittiMOT(IMDB):
                 all_boxes = detection[0]
                 frame_ids = detection[1]
                 for im_ind in range(len(frame_ids)):
-                    for cls_ind, cls in enumerate(self.claases):
+                    for cls_ind, cls in enumerate(self.classes):
                         if cls == '__background__':
                             continue
                         dets = all_boxes[cls_ind][im_ind]
@@ -233,50 +239,88 @@ class KittiMOT(IMDB):
         :return: info_str
         """
         info_str = ''
-        annopath =
         imageset_file = os.path.join(self.data_path, self.image_set + '.txt')
-    def gen_eval(self):
-        """
-        save to kitti format
-        :return:
-        """
-        import shutil
-        res_dir = os.path.join(self.data_path, 'results/')
-        if os.path.exists(res_dir):
-            shutil.rmtree(res_dir)
-        if not os.path.exists(res_dir):
-            os.mkdir(res_dir)
+        annocache = os.path.join(self.cache_path, self.name + '_annotations.pkl')
+
+        filename = self.get_result_file_template().format('all')
+        ap = kitti_mot_eval(filename, imageset_file, self.classes, annocache, ovthresh=0.5)
 
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
-            print 'Writing final {} results'.format(cls)
-            filename = os.path.join(self.cache_path, 'results', self.image_set + '_' + cls + '.txt')
-            with open(filename, 'r') as f:
-                dets = f.readlines()
-            for l in dets:
-                im_ind = l.split(' ')[0]
-                det = map(float, l.split(' ')[1:])
-                res_dir_det = os.path.dirname(res_dir + im_ind)
-                if not os.path.exists(res_dir_det):
-                    os.makedirs(res_dir_det)
-                with open(os.path.join(res_dir_det, os.path.basename(im_ind).split('.')[0] + '.txt'), 'a') as fo:
-                    fo.write('%s -1 -1 -10 ' % cls)
-                    fo.write('%.2f ' % det[1])
-                    fo.write('%.2f ' % det[2])
-                    fo.write('%.2f ' % det[3])
-                    fo.write('%.2f ' % det[4])
-                    fo.write('-1 -1 -1 -1000 -1000 -1000 -10 ')
-                    fo.write('%.8f\n' % det[0])
+            print('AP for {} = {:.4f}'.format(cls, ap[cls_ind-1]))
+            info_str += 'AP for {} = {:.4f}\n'.format(cls, ap[cls_ind-1])
+        print('Mean AP@0.5 = {:.4f}'.format(np.mean(ap)))
+        info_str += 'Mean AP@0.5 = {:.4f}\n\n'.format(np.mean(ap))
+        return info_str
 
-        with open(os.path.join(self.data_path, 'imglists', self.image_set + '.lst')) as f:
-            img_list = f.readlines()
-        img_list = [item.split(':')[0] for item in img_list]
-        for im_ind in img_list:
-            res_dir_det = os.path.dirname(res_dir + im_ind)
-            if not os.path.exists(res_dir_det):
-                os.makedirs(res_dir_det)
-            filename = os.path.join(res_dir_det, os.path.basename(im_ind).split('.')[0] + '.txt')
-            if not os.path.exists(filename):
-                print 'creating', filename
-                open(filename, 'a').close()
+    def do_python_eval_gen(self):
+        """
+        python evaluation wrapper
+        :return: info_str
+        """
+        info_str = ''
+        imageset_file = os.path.join(self.data_path, self.image_set + '_eval.txt')
+        annocache = os.path.join(self.cache_path, self.name + '_annotations.pkl')
+
+        with open(imageset_file, 'w') as f:
+            for i in range(len(self.pattern)):
+                for j in range(self.frame_seg_len[i]):
+                    f.write((self.pattern[i] % (self.frame_seg_id[i] + j)) + ' ' + str(self.frame_id[i] + j) + '\n')
+
+        filename = self.get_result_file_template().format('all')
+        ap = kitti_mot_eval(filename, imageset_file, self.classes, annocache, ovthresh=0.5)
+        for cls_ind, cls in enumerate(self.classes):
+            if cls == '__background__':
+                continue
+            print('AP for {} = {:.4f}'.format(cls, ap[cls_ind-1]))
+            info_str += 'AP for {} = {:.4f}\n'.format(cls, ap[cls_ind-1])
+        print('Mean AP@0.5 = {:.4f}'.format(np.mean(ap)))
+        info_str += 'Mean AP@0.5 = {:.4f}\n\n'.format(np.mean(ap))
+        return info_str
+
+    # def gen_eval(self):
+    #     """
+    #     save to kitti format
+    #     :return:
+    #     """
+    #     import shutil
+    #     res_dir = os.path.join(self.data_path, 'results/')
+    #     if os.path.exists(res_dir):
+    #         shutil.rmtree(res_dir)
+    #     if not os.path.exists(res_dir):
+    #         os.mkdir(res_dir)
+    #
+    #     for cls_ind, cls in enumerate(self.classes):
+    #         if cls == '__background__':
+    #             continue
+    #         print 'Writing final {} results'.format(cls)
+    #         filename = os.path.join(self.cache_path, 'results', self.image_set + '_' + cls + '.txt')
+    #         with open(filename, 'r') as f:
+    #             dets = f.readlines()
+    #         for l in dets:
+    #             im_ind = l.split(' ')[0]
+    #             det = map(float, l.split(' ')[1:])
+    #             res_dir_det = os.path.dirname(res_dir + im_ind)
+    #             if not os.path.exists(res_dir_det):
+    #                 os.makedirs(res_dir_det)
+    #             with open(os.path.join(res_dir_det, os.path.basename(im_ind).split('.')[0] + '.txt'), 'a') as fo:
+    #                 fo.write('%s -1 -1 -10 ' % cls)
+    #                 fo.write('%.2f ' % det[1])
+    #                 fo.write('%.2f ' % det[2])
+    #                 fo.write('%.2f ' % det[3])
+    #                 fo.write('%.2f ' % det[4])
+    #                 fo.write('-1 -1 -1 -1000 -1000 -1000 -10 ')
+    #                 fo.write('%.8f\n' % det[0])
+    #
+    #     with open(os.path.join(self.data_path, 'imglists', self.image_set + '.lst')) as f:
+    #         img_list = f.readlines()
+    #     img_list = [item.split(':')[0] for item in img_list]
+    #     for im_ind in img_list:
+    #         res_dir_det = os.path.dirname(res_dir + im_ind)
+    #         if not os.path.exists(res_dir_det):
+    #             os.makedirs(res_dir_det)
+    #         filename = os.path.join(res_dir_det, os.path.basename(im_ind).split('.')[0] + '.txt')
+    #         if not os.path.exists(filename):
+    #             print 'creating', filename
+    #             open(filename, 'a').close()

@@ -48,20 +48,20 @@ network:
   NORMALIZE_RPN: TRUE
   NUM_ANCHORS: 9
 dataset:
-  NUM_CLASSES: 31
+  NUM_CLASSES: 4
   dataset: KittiMOT
   dataset_path: "./data/kitti"
   image_set: kitti_mot_train
   root_path: "./data"
-  test_image_set: VID_val_frames
+  test_image_set: kitti_mot_training_test_frames
   proposal: rpn
 TRAIN:
-  lr: 0.001
-  lr_step: '7'
+  lr: 0.00025
+  lr_step: '10,20'
   warmup: false
   begin_epoch: 0
-  end_epoch: 15
-  model_prefix: 'rfcn_kitti_mot'
+  end_epoch: 30
+  model_prefix: 'rfcn_kitti_det_total'
   # whether resume training
   RESUME: false
   # whether flip image
@@ -140,4 +140,4 @@ TEST:
   RPN_MIN_SIZE: 0
   # RCNN nms
   NMS: 0.3
-  test_epoch: 2
+  test_epoch: 20

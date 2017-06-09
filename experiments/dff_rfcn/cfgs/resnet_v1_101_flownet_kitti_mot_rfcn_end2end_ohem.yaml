@@ -1,8 +1,9 @@
 ---
 MXNET_VERSION: "mxnet"
-output_path: "./output/dff_rfcn/kitti"
+#　output_path: "./output/dff_rfcn/kitti"
+output_path: "/data/syzhang/output/dff_rfcn/kitti_mot"
 symbol: resnet_v1_101_flownet_rfcn
-gpus: '4,5,6,7'
+gpus: '0,1,2,3'
 CLASS_AGNOSTIC: true
 SCALES:
 - 376
@@ -56,17 +57,18 @@ dataset:
   dataset_path: "./data/kitti"
   image_set: kitti_mot_train
   root_path: "./data"
-  test_image_set: VID_val_videos
+  test_image_set: kitti_mot_training_test
   proposal: rpn
 TRAIN:
   lr: 0.00025
-  lr_step: '20'
+  lr_step: '20,40,50,60'
   warmup: false
-  begin_epoch: 15
-  end_epoch: 30
-  model_prefix: 'dff_rfcn_kitti_mot'
+  begin_epoch: 0
+  end_epoch: 60
+  #model_prefix: 'dff_rfcn_kitti_mot'
+  model_prefix: 'dff_rfcn_kitti_mot_new'
   # whether resume training
-  RESUME: true
+  RESUME: false
   # whether flip image
   FLIP: true
   # whether shuffle image
@@ -147,4 +149,5 @@ TEST:
   RPN_MIN_SIZE: 0
   # RCNN nms
   NMS: 0.3
-  test_epoch: 2
+  test_epoch: 32
+  KEY_FRAME_INTERVAL: 4

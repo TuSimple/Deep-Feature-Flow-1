@@ -93,7 +93,7 @@ class KittiDET(IMDB):
         roi_rec['width'] = image_size[1]
         annotations_file = self.frame_index[iindex].replace('.png', '.txt')
         # load bbox
-        annotation_file_path = os.path.join('./data/kitti/kitti_det_label/train', annotations_file)
+        annotation_file_path = os.path.join('./data/kitti/kitti_det_label/total', annotations_file)
         assert os.path.exists(annotation_file_path), "Path does not exist:{}".format(annotation_file_path)
 
         with open(annotation_file_path, 'r') as f:

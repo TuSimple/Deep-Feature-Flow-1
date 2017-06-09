@@ -70,8 +70,8 @@ def get_pair_path(curr_img_path, rand_map, img_map):
 # create_index_file_kitti_det()
 
 def create_annotaion_file_kitti_det():
-    path = './data/kitti/kitti_det_train_label.lst'
-    new_label_base_path = './data/kitti/kitti_det_label/train/'
+    path = './data/kitti/kitti_det_total_label.lst'
+    new_label_base_path = './data/kitti/kitti_det_label/total/'
     classes = ['car', 'pedestrian', 'cyclist']
 
     with open(path, 'r') as f:
@@ -87,7 +87,7 @@ def create_annotaion_file_kitti_det():
         frame_index = item[0]
         bbox = item[1:]
         label_file = frame_index.replace('.png','.txt')
-        label_file = os.path.join('./data/kitti/kitti_det_label/train/', label_file)
+        label_file = os.path.join('./data/kitti/kitti_det_label/total/', label_file)
 
         with open(label_file, 'w') as f:
             for i in range(len(classes)):

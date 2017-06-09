@@ -141,7 +141,7 @@ config.TEST.RPN_MIN_SIZE = config.network.RPN_FEAT_STRIDE
 config.TEST.NMS = 0.3
 
 # DFF
-config.TEST.KEY_FRAME_INTERVAL = 10
+config.TEST.KEY_FRAME_INTERVAL = 1
 
 config.TEST.max_per_image = 300
 

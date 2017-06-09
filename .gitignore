@@ -4,6 +4,10 @@
 out
 gen
 
+# Data Cache
+data/cache
+demo/
+logs*/
 ### Vim template
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]

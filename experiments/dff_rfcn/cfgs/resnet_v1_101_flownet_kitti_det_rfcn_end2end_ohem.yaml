@@ -1,8 +1,8 @@
 ---
 MXNET_VERSION: "mxnet"
-output_path: "/data/syzhang/output/dff_rfcn/kitti_det"
+output_path: "/data/syzhang/output/dff_rfcn/kitti_det_total"
 symbol: resnet_v1_101_flownet_rfcn
-gpus: '4,5,6,7'
+gpus: '0,1,2,3'
 CLASS_AGNOSTIC: true
 SCALES:
 - 376
@@ -54,17 +54,17 @@ dataset:
   NUM_CLASSES: 4
   dataset: KittiDET
   dataset_path: "./data/kitti"
-  image_set: kitti_det_train
+  image_set: kitti_det_total
   root_path: "./data"
   test_image_set: VID_val_videos
   proposal: rpn
 TRAIN:
   lr: 0.00025
-  lr_step: '10,20'
+  lr_step: '15,30,45,50'
   warmup: false
   begin_epoch: 0
-  end_epoch: 30
-  model_prefix: 'dff_rfcn_kitti_det'
+  end_epoch: 50
+  model_prefix: 'dff_rfcn_kitti_det_total'
   # whether resume training
   RESUME: false
   # whether flip image
@@ -132,7 +132,7 @@ TRAIN:
   - 0.2
 
   # Add by Songyang Zhang, for kitti mot dataset
-  MIN_OFFSET: -1
+  MIN_OFFSET: -3
   MAX_OFFSET: -1 # USE pre frame to warp
 TEST:
   # use rpn to generate proposal

@@ -8,8 +8,10 @@
 
 import time
 import logging
+import os
 import mxnet as mx
 import tensorboard as tb
+from config.config import config, update_config
 
 class Speedometer(object):
     def __init__(self, batch_size, frequent=50):
@@ -18,7 +20,7 @@ class Speedometer(object):
         self.init = False
         self.tic = 0
         self.last_count = 0
-        self.summary_writer = tb.FileWriter('./logs/')
+        self.summary_writer = tb.FileWriter(os.path.join(config.output_path,'tb_logs'))
 
     def __call__(self, param):
         """Callback to Show speed."""

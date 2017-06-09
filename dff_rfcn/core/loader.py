@@ -356,4 +356,3 @@ class AnchorLoader(mx.io.DataIter):
                               self.anchor_ratios, self.allowed_border,
                               self.normalize_target, self.bbox_mean, self.bbox_std)
         return {'data': data, 'label': label}
-
